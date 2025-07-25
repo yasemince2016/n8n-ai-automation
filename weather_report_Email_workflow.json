@@ -1,0 +1,146 @@
+{
+  "name": "Weather Report Automation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        -256
+      ],
+      "id": "730f8224-f868-4737-ac6d-1626468aca96",
+      "name": "Manual Test"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        -96
+      ],
+      "id": "94c0e4ad-34a4-492e-8954-8444f6ad214c",
+      "name": "6 am schedule"
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=41.88&longitude=87.63&daily=sunrise,sunset,daylight_duration,sunshine_duration,rain_sum,showers_sum,snowfall_sum&hourly=temperature_2m&forecast_days=3&wind_speed_unit=mph&temperature_unit=fahrenheit",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        -160
+      ],
+      "id": "c53a44d6-9c5c-44ae-b5ad-41370da505a4",
+      "name": "gets weather"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the JSON from input\nconst data = items[0].json;\n\n// Get today's date in YYYY-MM-DD format (UTC-based to match API)\nconst today = new Date().toISOString().split(\"T\")[0];\n\n// Find all hourly timestamps for today\nconst times = data.hourly.time;\nconst temps = data.hourly.temperature_2m;\n\nlet todayTemps = [];\n\nfor (let i = 0; i < times.length; i++) {\n  if (times[i].startsWith(today)) {\n    todayTemps.push(temps[i]);\n  }\n}\n\n// Calculate high and low for today\nconst high = Math.max(...todayTemps);\nconst low = Math.min(...todayTemps);\n\n// Return formatted message\nreturn [\n  {\n    json: {\n      message: `In Chicago, the high today is ${high}°F, the low is ${low}°F.`\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        -160
+      ],
+      "id": "e53477ba-7704-4fc1-99a6-041a4caa52d1",
+      "name": "create message"
+    },
+    {
+      "parameters": {
+        "sendTo": "yaseminarya1@gmail.com",
+        "subject": "Weather Report for Today!",
+        "emailType": "text",
+        "message": "={{ $json.message }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        768,
+        -160
+      ],
+      "id": "a43b712f-bd18-4be2-a648-5fd87acd4e88",
+      "name": "Send a message",
+      "webhookId": "c0b25ea7-bdfb-45d7-8f37-69942daf5038",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ZE1OOvTYbJYMFpBP",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Test": {
+      "main": [
+        [
+          {
+            "node": "gets weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 am schedule": {
+      "main": [
+        [
+          {
+            "node": "gets weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gets weather": {
+      "main": [
+        [
+          {
+            "node": "create message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create message": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "fdd761eb-fa84-4fc8-be74-56efad23e5fd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dec04f23d08905303715a68f011a6776ba01e450c0e8ce8ca3438c6937b93a9a"
+  },
+  "id": "mLpL71mpzCIyxYkG",
+  "tags": []
+}
