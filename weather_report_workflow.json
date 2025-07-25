@@ -1,5 +1,5 @@
 {
-  "name": "My workflow",
+  "name": "weather_report_workflow",
   "nodes": [
     {
       "parameters": {
